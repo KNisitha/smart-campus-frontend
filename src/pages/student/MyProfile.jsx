@@ -18,8 +18,34 @@ const MyProfile = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const response = await api.get('/api/students/me');
-        setProfile(response.data);
+        if (!user?.id) {
+          setError('User not authenticated');
+          return;
+        }
+
+        const [studentsRes, deptsRes] = await Promise.all([
+          api.get('/api/students'),
+          api.get('/api/departments')
+        ]);
+
+        const students = studentsRes.data?.data || [];
+        const departments = deptsRes.data?.data || [];
+
+        const student = students.find(s => String(s.userId) === String(user.id));
+
+        if (!student) {
+          setError('Student profile not found');
+          return;
+        }
+
+        const department = departments.find(d => String(d._id) === String(student.departmentId));
+
+        setProfile({
+          ...user,
+          ...student,
+          studentId: student?.registerNumber,
+          department: department?.name
+        });
         setError(null);
       } catch (err) {
         console.error("Failed to fetch profile:", err);
@@ -30,8 +56,10 @@ const MyProfile = () => {
       }
     };
 
-    fetchProfile();
-  }, []);
+    if (user?.id) {
+      fetchProfile();
+    }
+  }, [user]);
 
   if (loading) {
     return (
