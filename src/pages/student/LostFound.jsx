@@ -315,7 +315,7 @@ const LostFound = () => {
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
               <option value="All">All Categories</option>
-              {dynamicCategories.map((c, i) => <option key={i} value={c}>{c}</option>)}
+              {uniqueCategories.map((c, i) => <option key={i} value={c}>{c}</option>)}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
               <Filter size={14} />

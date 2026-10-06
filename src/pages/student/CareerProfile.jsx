@@ -43,21 +43,21 @@ const CareerProfile = () => {
       setLoading(true);
       setError(null);
       
-      // Fetch both student info and career profile defensively
-      const [studentRes, careerRes] = await Promise.allSettled([
-        api.get('/api/students/me'),
-        api.get('/api/career-profiles').catch(() => api.get('/api/career-profile')) // Catch varying endpoints
+      const userId = user?.id || user?._id || user?.userId;
+      
+      const [studentsRes, careerRes] = await Promise.allSettled([
+        api.get('/api/students'),
+        api.get('/api/career-profiles').catch(() => api.get('/api/career-profile'))
       ]);
 
-      if (studentRes.status === 'fulfilled') {
-        const sData = studentRes.value.data?.data || studentRes.value.data;
-        setStudentInfo(sData);
+      if (studentsRes.status === 'fulfilled') {
+        const sList = studentsRes.value.data?.data || studentsRes.value.data || [];
+        const student = Array.isArray(sList) ? sList.find(s => String(s.userId) === String(userId)) : null;
+        setStudentInfo(student || {});
       }
 
       if (careerRes.status === 'fulfilled') {
         const cData = careerRes.value.data?.data || careerRes.value.data;
-        
-        // Handle array vs object responses safely
         const profileObj = Array.isArray(cData) ? cData[0] : cData;
         setProfile(profileObj || {});
       } else {
