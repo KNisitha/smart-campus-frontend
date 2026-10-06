@@ -18,7 +18,10 @@ const MyProfile = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const userId = user?.id || user?._id;
+        const userId = user?.id || user?._id || user?.userId;
+        console.log("AUTH USER:", user);
+        console.log("AUTH USER ID:", userId);
+        
         if (!userId) {
           setError('User not authenticated or ID missing');
           return;
