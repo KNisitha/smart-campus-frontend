@@ -18,8 +18,9 @@ const MyProfile = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        if (!user?.id) {
-          setError('User not authenticated');
+        const userId = user?.id || user?._id;
+        if (!userId) {
+          setError('User not authenticated or ID missing');
           return;
         }
 
@@ -28,10 +29,13 @@ const MyProfile = () => {
           api.get('/api/departments')
         ]);
 
-        const students = studentsRes.data?.data || [];
-        const departments = deptsRes.data?.data || [];
+        let students = studentsRes.data?.data || studentsRes.data;
+        if (!Array.isArray(students)) students = [];
 
-        const student = students.find(s => String(s.userId) === String(user.id));
+        let departments = deptsRes.data?.data || deptsRes.data;
+        if (!Array.isArray(departments)) departments = [];
+
+        const student = students.find(s => String(s.userId) === String(userId));
 
         if (!student) {
           setError('Student profile not found');
@@ -56,7 +60,7 @@ const MyProfile = () => {
       }
     };
 
-    if (user?.id) {
+    if (user) {
       fetchProfile();
     }
   }, [user]);
