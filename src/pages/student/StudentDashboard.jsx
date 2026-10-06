@@ -29,7 +29,6 @@ const StudentDashboard = () => {
         setLoading(true);
         // Using Promise.allSettled to ensure dashboard loads even if some APIs fail
         const results = await Promise.allSettled([
-          api.get('/api/students/me').catch(() => ({ data: null })), // fallback if specific profile endpoint doesn't exist
           api.get('/api/attendance'),
           api.get('/api/assignments'),
           api.get('/api/submissions'),
@@ -39,20 +38,20 @@ const StudentDashboard = () => {
           api.get('/api/announcements')
         ]);
 
-        const getResultData = (result) => 
-          result.status === 'fulfilled' && result.value ? result.value.data : [];
+        const getResultData = (result) => {
+          if (result.status !== 'fulfilled' || !result.value) return [];
+          return result.value.data?.data ?? result.value.data ?? [];
+        };
 
-        const profileData = getResultData(results[0]);
-        
         setData({
-          profile: profileData || user, 
-          attendance: getResultData(results[1]),
-          assignments: getResultData(results[2]),
-          submissions: getResultData(results[3]),
-          marks: getResultData(results[4]),
-          events: getResultData(results[5]),
-          notifications: getResultData(results[6]),
-          announcements: getResultData(results[7])
+          profile: user,
+          attendance: getResultData(results[0]),
+          assignments: getResultData(results[1]),
+          submissions: getResultData(results[2]),
+          marks: getResultData(results[3]),
+          events: getResultData(results[4]),
+          notifications: getResultData(results[5]),
+          announcements: getResultData(results[6])
         });
       } catch (error) {
         console.error("Dashboard data fetch error:", error);
@@ -85,8 +84,8 @@ const StudentDashboard = () => {
 
   // Calculate Marks Stats
   const recentMarks = data.marks.slice(0, 3);
-  const totalMarksEarned = data.marks.reduce((acc, curr) => acc + (curr.obtainedMarks || 0), 0);
-  const totalMaxMarks = data.marks.reduce((acc, curr) => acc + (curr.totalMarks || 100), 0);
+  const totalMarksEarned = data.marks.reduce((acc, curr) => acc + (curr.marksObtained || 0), 0);
+  const totalMaxMarks = data.marks.reduce((acc, curr) => acc + (curr.maxMarks || 100), 0);
   const averageMarks = totalMaxMarks > 0 ? Math.round((totalMarksEarned / totalMaxMarks) * 100) : 0;
 
   return (
@@ -165,7 +164,7 @@ const StudentDashboard = () => {
                recentMarks.map((m, i) => (
                  <div key={i} className="flex justify-between text-xs items-center">
                    <span className="text-gray-600 truncate max-w-[100px]">{m.subject || 'Subject'}</span>
-                   <span className="font-semibold">{m.obtainedMarks}/{m.totalMarks}</span>
+                   <span className="font-semibold">{m.marksObtained}/{m.maxMarks}</span>
                  </div>
                ))
             ) : (
